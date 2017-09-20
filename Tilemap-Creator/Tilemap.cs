@@ -7,10 +7,18 @@ namespace TMC
     //[StructLayout(LayoutKind.Sequential, Pack = 1)]
     public class Tile
     {
-        public int TilesetIndex { get; set; } = 0;
-        public int PaletteIndex { get; set; } = 0;
-        public bool FlipX { get; set; } = false;
-        public bool FlipY { get; set; } = false;
+        public int TilesetIndex { get; set; } 
+        public int PaletteIndex { get; set; }
+        public bool FlipX { get; set; }
+        public bool FlipY { get; set; }
+        
+        public Tile()
+        {
+        	TilesetIndex=0;
+        	PaletteIndex=0;
+        	FlipX=false;
+        	FlipY=false;
+        }
     }
 
     public enum TilemapFormat
@@ -202,7 +210,7 @@ namespace TMC
 
             using (var sw = File.CreateText(filename))
             {
-                sw.Write($"unsigned char {variableName}[] = ");
+            	sw.Write(String.Format("unsigned char {0}[] = ",variableName));
                 sw.Write("{");
 
                 // --------------------------------

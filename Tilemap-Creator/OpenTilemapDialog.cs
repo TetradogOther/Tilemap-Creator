@@ -44,7 +44,7 @@ namespace TMC
 
             cSize.Items.Clear();
             foreach (var size in sizes)
-                cSize.Items.Add($"{size.Width} x {size.Height}");
+            	cSize.Items.Add(String.Format("{0} x {1}",size.Width,size.Height));
 
             friendlySizes = sizes.ToArray();
             cSize.SelectedIndex = 0;

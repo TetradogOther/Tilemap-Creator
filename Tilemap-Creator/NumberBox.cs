@@ -25,9 +25,14 @@ namespace TMC
             }
         }
 
-        public int MinimumValue { get; set; } = 0;
-        public int MaximumValue { get; set; } = int.MaxValue - 1;
+        public int MinimumValue { get; set; }
+        public int MaximumValue { get; set; } 
 
+        public NumberBox()
+        {
+        	MaximumValue=int.MaxValue - 1;
+        	MinimumValue=0;
+        }
         protected override void OnKeyPress(KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
@@ -65,9 +70,14 @@ namespace TMC
             }
         }
 
-        public int MinimumValue { get; set; } = 0;
-        public int MaximumValue { get; set; } = int.MaxValue - 1;
+        public int MinimumValue { get; set; }
+        public int MaximumValue { get; set; }
 
+        public NumberComboBox()
+        {
+        	MinimumValue=0;
+        	MaximumValue=int.MaxValue-1;
+        }
         protected override void OnKeyPress(KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
