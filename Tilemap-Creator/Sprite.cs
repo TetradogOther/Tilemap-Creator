@@ -452,11 +452,13 @@ namespace TMC
 		/// </summary>
 		public void Lock()
 		{
-			if (locked) return;
-			locked = true;
+			if (!locked)
+			{
+				locked = true;
 
-			// lock bits
-			imageData = image.LockBits(PixelFormat.Format24bppRgb);
+				// lock bits
+				imageData = image.LockBits(PixelFormat.Format24bppRgb);
+			}
 		}
 
 		/// <summary>
@@ -464,22 +466,23 @@ namespace TMC
 		/// </summary>
 		public void Unlock()
 		{
-			if (!locked) return;
-			locked = false;
+			if (locked){
+				locked = false;
 
-			// update image cache, unlock bits
-			var buffer = new byte[width * height * 3];
-			for (int i = 0; i < width * height; i++)
-			{
-				var color = palette[pixels[i]];
+				// update image cache, unlock bits
+				var buffer = new byte[width * height * 3];
+				for (int i = 0; i < width * height; i++)
+				{
+					var color = palette[pixels[i]];
 
-				buffer[i * 3] = color.B;
-				buffer[i * 3 + 1] = color.G;
-				buffer[i * 3 + 2] = color.R;
+					buffer[i * 3] = color.B;
+					buffer[i * 3 + 1] = color.G;
+					buffer[i * 3 + 2] = color.R;
+				}
+
+				Marshal.Copy(buffer, 0, imageData.Scan0, buffer.Length);
+				image.UnlockBits(imageData);
 			}
-
-			Marshal.Copy(buffer, 0, imageData.Scan0, buffer.Length);
-			image.UnlockBits(imageData);
 		}
 
 		/// <summary>
@@ -489,14 +492,26 @@ namespace TMC
 		/// <returns>Whether the given Sprite is equivalent to this.</returns>
 		public bool Compare(Sprite other)
 		{
-			if (other.width != width || other.height != height) return false;
+			bool compare=false;
+			bool encontrado=false;
+			
+			if (other.width != width || other.height != height)
+				compare= false;
+			else{
 
-			// probably faster than the below method
-			for (int i = 0; i < pixels.Length; i++)
-			{
-				if (pixels[i] != other.pixels[i]) return false;
+				// probably faster than the below method
+				for (int i = 0; i < pixels.Length&&!encontrado; i++)
+				{
+					if (pixels[i] != other.pixels[i])
+					{
+						compare= false;
+						encontrado=true;
+					}
+				}
+				if(!encontrado)//si no ha encontrado la diferenecia es que esta bien :)
+					compare= true;
 			}
-			return true;
+			return compare;
 		}
 
 		/// <summary>
@@ -508,22 +523,33 @@ namespace TMC
 		/// <returns>Whether the given Sprite is equivalent to this.</returns>
 		public bool Compare(Sprite other, bool flipX, bool flipY)
 		{
-			if (other.width != width || other.height != height) return false;
-
-			for (int y = 0; y < height; y++)
-			{
-				for (int x = 0; x < width; x++)
+			bool compare=false;
+			bool encontrado=false;
+			
+			if (other.width != width || other.height != height)
+				compare= false;
+			else{
+				for (int y = 0; y < height&&!encontrado; y++)
 				{
-					int x2 = flipX ? (width - x - 1) : x;
-					int y2 = flipY ? (height - y - 1) : y;
+					for (int x = 0; x < width&&!encontrado; x++)
+					{
+						int x2 = flipX ? (width - x - 1) : x;
+						int y2 = flipY ? (height - y - 1) : y;
 
-					int indexThis = x2 + y2 * width;
-					int indexOther = x + y * width;
+						int indexThis = x2 + y2 * width;
+						int indexOther = x + y * width;
 
-					if (other.pixels[indexOther] != pixels[indexThis]) return false;
+						if (other.pixels[indexOther] != pixels[indexThis])
+						{
+							compare=false;
+							encontrado=true;
+						}
+					}
 				}
+				if(!encontrado)
+					compare=true;
 			}
-			return true;
+			return compare;
 		}
 
 		/// <summary>
@@ -596,16 +622,18 @@ namespace TMC
 
 			// assumes palette and new palette match
 			int[] swaps = new int[palette.Length];
-			for (int i = 0; i < palette.Length; i++)
+			bool encontrado;
+			for (int i = 0,j; i < palette.Length; i++)
 			{
 				// find color in newPalette matching palette[i]
-				int j = 0;
-				for (int k = 0; k < palette.Length; k++)
+				j = 0;
+				encontrado=false;
+				for (int k = 0; k < palette.Length&&!encontrado; k++)
 				{
 					if (palette[i] == newPalette[k])
 					{
 						j = k;
-						break;
+						encontrado=true;
 					}
 				}
 
@@ -669,7 +697,7 @@ namespace TMC
             }*/
 
 			// seems that Bitmap.Clone() does not work correctly?
-			var clone = new Bitmap(bmp.Width, bmp.Height, newFormat);
+			Bitmap clone = new Bitmap(bmp.Width, bmp.Height, newFormat);
 			using (var g = Graphics.FromImage(clone))
 				g.DrawImage(bmp, new Rectangle(0, 0, clone.Width, clone.Height));
 
@@ -693,7 +721,7 @@ namespace TMC
 		{
 			// TODO: remove if's and put them in this vv
 			// no flipping:
-			var dest = new Point[]
+			Point[] dest = new Point[]
 			{
 				new Point(x, y),                    // upper-left corner
 				new Point(x + image.Width, y),      // upper-right corner

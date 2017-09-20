@@ -60,8 +60,8 @@ namespace TMC
             {
                 // --------------------------------
                 // number of tiles stored in this file
-                var tileCount = (int)br.BaseStream.Length / (format == TilemapFormat.RotationScaling ? 1 : 2);
-
+                int tileCount = (int)br.BaseStream.Length / (format == TilemapFormat.RotationScaling ? 1 : 2);
+                Tile t;
                 // --------------------------------
                 // size of tilemap
                 // some tiles could be lost
@@ -76,7 +76,7 @@ namespace TMC
                     {
                         // --------------------------------
                         // Read tile
-                        var t = new Tile();
+                        t = new Tile();
 
                         if (format == TilemapFormat.Text4)
                         {
@@ -124,12 +124,14 @@ namespace TMC
         {
             // declare new tile array
             Tile[] newTiles = new Tile[newWidth * newHeight];
+            int copyWidth;
+            int copyHeight;
             for (int i = 0; i < newWidth * newHeight; i++)
                 newTiles[i] = new Tile();
 
             // the data needed to be copied
-            int copyWidth = Math.Min(width, newWidth);
-            int copyHeight = Math.Min(height, newHeight);
+             copyWidth = Math.Min(width, newWidth);
+             copyHeight = Math.Min(height, newHeight);
             
             // copy tiles over
             for (int y = 0; y < copyHeight; y++)
@@ -206,8 +208,8 @@ namespace TMC
         /// <param name="extraBytes"></param>
         void Save2(string filename, TilemapFormat format, int extraBytes = 0)
         {
-            var variableName = Path.GetFileNameWithoutExtension(filename).ToLower().Replace(' ', '_');
-
+            string variableName = Path.GetFileNameWithoutExtension(filename).ToLower().Replace(' ', '_');
+            Tile t;
             using (var sw = File.CreateText(filename))
             {
             	sw.Write(String.Format("unsigned char {0}[] = ",variableName));
@@ -219,7 +221,7 @@ namespace TMC
                 {
                     for (int x = 0; x < width; x++)
                     {
-                        var t = this[x, y];
+                         t = this[x, y];
 
                         if (format == TilemapFormat.Text4)
                             sw.Write((ushort)(
@@ -251,7 +253,7 @@ namespace TMC
             // http://llref.emutalk.net/docs/?file=xml/nscr.xml#xml-doc
             // there are actually a lot of options for this format
             // a separate editor may be better, honestly
-
+            Tile t;
             using (var fs = File.Create(filename))
             using (var bw = new BinaryWriter(fs))
             {
@@ -275,7 +277,7 @@ namespace TMC
                 {
                     for (int x = 0; x < width; x++)
                     {
-                        var t = this[x, y];
+                        t = this[x, y];
 
                         if (bitDepth == TilemapFormat.Text4)
                             bw.Write((ushort)(

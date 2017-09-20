@@ -11,7 +11,7 @@ namespace TMC
 	{
 		public const int TileSize = 8;
 
-		Sprite[] tiles;
+		IList<Sprite> tiles;
 
 		public Tileset(Sprite source)
 		{
@@ -24,8 +24,7 @@ namespace TMC
 			int tiledHeight = source.Height / TileSize;
 			tiles = new Sprite[tiledWidth * tiledHeight];
 
-			int i = 0;
-			for (int y = 0; y < tiledHeight; y++)
+			for (int y = 0,i=0; y < tiledHeight; y++)
 			{
 				for (int x = 0; x < tiledWidth; x++)
 				{
@@ -35,7 +34,7 @@ namespace TMC
 			}
 		}
 
-		public Tileset(Sprite[] tiles)
+		public Tileset(IList<Sprite> tiles)
 		{
 			this.tiles = tiles;
 		}
@@ -44,7 +43,7 @@ namespace TMC
 		{
 			if (tiles != null)
 			{
-				for (int i = 0; i < tiles.Length; i++)
+				for (int i = 0; i < tiles.Count; i++)
 					if(tiles[i]!=null)
 						tiles[i].Dispose();
 			}
@@ -61,18 +60,24 @@ namespace TMC
 		public static void Create(Sprite source, bool allowFlipping, out Tileset tileset, out Tilemap tilemap)
 		{
 			// copy tile Sprites from source Sprite
-			var tiledWidth = source.Width / TileSize;
-			var tiledHeight = source.Height / TileSize;
-			var tiles = new Sprite[tiledWidth * tiledHeight];
-
+			int tiledWidth = source.Width / TileSize;
+			int tiledHeight = source.Height / TileSize;
+			Sprite[] tiles = new Sprite[tiledWidth * tiledHeight];
+			List<Sprite> uniqueTiles;
+			int current;
+			Sprite tile;
+			// info for flipping
+			int index;
+			bool flipX;
+			bool flipY;
+			
+			bool encontrado;
 			// create base tileset
-			int t = 0;
-			for (int y = 0; y < tiledHeight; y++)
+			for (int y = 0,t=0; y < tiledHeight; y++)
 			{
 				for (int x = 0; x < tiledWidth; x++)
 				{
-					tiles[t++] = new Sprite(source,
-					                        new Rectangle(x * TileSize, y * TileSize, TileSize, TileSize));
+					tiles[t++] = new Sprite(source, new Rectangle(x * TileSize, y * TileSize, TileSize, TileSize));
 				}
 			}
 
@@ -82,21 +87,22 @@ namespace TMC
 
 			// remove all repeated tiles
 			// the first tile is always preserved
-			var uniqueTiles = new List<Sprite> { tiles[0] };
-			int current = 1;
+			uniqueTiles = new List<Sprite> { tiles[0] };
+			current = 1;
 
 			for (int i = 1; i < tiles.Length; i++)
 			{
-				var tile = tiles[i];
+				tile = tiles[i];
 
 				// info for flipping
-				var index = current;
-				var flipX = false;
-				var flipY = false;
+				index = current;
+				flipX = false;
+				flipY = false;
 
 				// compare against all unique tiles to check for repeats
 				// gets slower as the tileset grows ;(
-				for (int j = 0; j < uniqueTiles.Count; j++)
+				encontrado=false;
+				for (int j = 0; j < uniqueTiles.Count&&!encontrado; j++)
 				{
 					var otherTile = uniqueTiles[j];
 
@@ -104,30 +110,30 @@ namespace TMC
 					if (tile.Compare(otherTile))
 					{
 						index = j;
-						break;
+						encontrado=true;
 					}
 
 					// compare flipped
-					if (allowFlipping)
+					if (allowFlipping&&!encontrado)
 					{
 						if (tile.Compare(otherTile, true, false))
 						{
 							index = j;
 							flipX = true;
-							break;
+							encontrado=true;
 						}
-						if (tile.Compare(otherTile, false, true))
+						else if (tile.Compare(otherTile, false, true))
 						{
 							index = j;
 							flipY = true;
-							break;
+							encontrado=true;
 						}
-						if (tile.Compare(otherTile, true, true))
+						else if (tile.Compare(otherTile, true, true))
 						{
 							index = j;
 							flipX = true;
 							flipY = true;
-							break;
+							encontrado=true;
 						}
 					}
 				}
@@ -149,7 +155,7 @@ namespace TMC
 				}
 			}
 
-			tileset = new Tileset(uniqueTiles.ToArray());
+			tileset = new Tileset(uniqueTiles);
 		}
 
 		/// <summary>
@@ -160,7 +166,7 @@ namespace TMC
 		public Sprite Smoosh(int tilesPerRow)
 		{
 			var width = tilesPerRow;
-			var height = (tiles.Length / tilesPerRow) + (tiles.Length % tilesPerRow > 0 ? 1 : 0);
+			var height = (tiles.Count / tilesPerRow) + (tiles.Count % tilesPerRow > 0 ? 1 : 0);
 			var tilesToSmoosh = width * height;
 
 			var result = new Sprite(width * TileSize, height * TileSize, tiles[0].Palette);
@@ -172,7 +178,7 @@ namespace TMC
 				var y = t / tilesPerRow;
 
 				// copy tile to result Sprite
-				var tile = tiles[t < tiles.Length ? t : 0];
+				var tile = tiles[t < tiles.Count ? t : 0];
 				for (int x2 = 0; x2 < TileSize; x2++)
 				{
 					for (int y2 = 0; y2 < TileSize; y2++)
@@ -191,7 +197,7 @@ namespace TMC
 		/// </summary>
 		public int Size
 		{
-			get { return tiles.Length; }
+			get { return tiles.Count; }
 		}
 
 		/// <summary>
@@ -202,11 +208,11 @@ namespace TMC
 			get
 			{
 				var sizes = new List<Size>();
-				for (int i = 1; i <= tiles.Length; i++)
+				for (int i = 1; i <= tiles.Count; i++)
 				{
-					if (tiles.Length % i == 0)
+					if (tiles.Count % i == 0)
 					{
-						sizes.Add(new Size(i, tiles.Length / i));
+						sizes.Add(new Size(i, tiles.Count / i));
 					}
 				}
 				return sizes.ToArray();
