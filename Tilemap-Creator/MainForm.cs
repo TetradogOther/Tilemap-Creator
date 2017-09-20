@@ -172,38 +172,44 @@ namespace TMC
 
 			if (openFileDialog1.ShowDialog() != DialogResult.OK) return;
 
-			using (var bmp = new Bitmap(openFileDialog1.FileName))
-				using (var sprite = new Sprite(bmp))
-			{
-				// Sprite dimensions must be divisible by 8
-				if (sprite.Width % 8 != 0 || sprite.Height % 8 != 0)
+			using (var bmp = new Bitmap(openFileDialog1.FileName)){
+				if (bmp.Width % 8 != 0 || bmp.Height % 8 != 0)
 				{
 					MessageBox.Show("Tileset source image dimensions are not divisible by 8!", "Invalid Image", MessageBoxButtons.OK, MessageBoxIcon.Error);
-					return;
+					
+				}
+				else{
+					using (var sprite = new Sprite(bmp))
+					{
+						// Sprite dimensions must be divisible by 8
+						
+
+						// create Tilemap/Tileset
+						if(tileset!=null)
+							tileset.Dispose();
+						Tileset.Create(sprite, mnuAllowFlipping.Checked, out tileset, out tilemap);
+					}
 				}
 
-				// create Tilemap/Tileset
-				if(tileset!=null)
-					tileset.Dispose();
-				Tileset.Create(sprite, mnuAllowFlipping.Checked, out tileset, out tilemap);
+				// fill sizes for Tileset
+				cTilesetWidth.Items.Clear();
+				cTilesetWidth.BeginUpdate();
+				for(int i=0;i< tileset.PerfectSizes.Length;i++)
+					cTilesetWidth.Items.Add(tileset.PerfectSizes[i].Width.ToString());
+
+				cTilesetWidth.EndUpdate();
+				// pick middle size
+				cTilesetWidth.SelectedIndex = cTilesetWidth.Items.Count / 2;
+
+				// finish
+				UpdateTileset(true);
+				UpdateTilemap();
+
+				mnuOpenTilemap.Enabled = true;
+				mnuSaveTilemap.Enabled = true;
+				mnuSaveTileset.Enabled = true;
+				mnuPalette.Enabled = true;
 			}
-
-			// fill sizes for Tileset
-			cTilesetWidth.Items.Clear();
-			foreach (var size in tileset.PerfectSizes)
-				cTilesetWidth.Items.Add(size.Width.ToString());
-
-			// pick middle size
-			cTilesetWidth.SelectedIndex = cTilesetWidth.Items.Count / 2;
-
-			// finish
-			UpdateTileset(true);
-			UpdateTilemap();
-
-			mnuOpenTilemap.Enabled = true;
-			mnuSaveTilemap.Enabled = true;
-			mnuSaveTileset.Enabled = true;
-			mnuPalette.Enabled = true;
 		}
 
 		private void mnuEditPalette_Click(object sender, EventArgs e)
